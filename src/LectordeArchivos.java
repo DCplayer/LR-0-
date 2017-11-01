@@ -1189,7 +1189,8 @@ public class LectordeArchivos {
         String siguiente = scanner.nextLine();
         System.out.println("FOLLOW: ");
         HashSet<String> resultadoSiguiente = follow(siguiente);
-        System.out.println(resultadoSiguiente);
+        HashSet<String> resultadoFollow = revisarNoTerminales(resultadoSiguiente);
+        System.out.println(resultadoFollow);
 
 
 
@@ -1513,12 +1514,13 @@ public class LectordeArchivos {
     }
 
     public HashSet<String>  follow(String Nodo){
+        Nodo = Nodo.replaceAll("\\s", "");
         HashSet<String> resultado = new HashSet<>();
         int tamanoInicial = 0;
         int tamanoFinal = 0;
         for(ArrayList<String> produccion: estructuraProducciones){
             if(produccion.contains(Nodo)&& produccion.indexOf(Nodo) != 0) {
-                if(produccion.indexOf(Nodo) == produccion.size()-1){
+                if(produccion.indexOf(Nodo) == produccion.size()-2){
                     HashSet<String> temporal = follow(produccion.get(0));
                     resultado.addAll(temporal);
                 }
@@ -1528,13 +1530,13 @@ public class LectordeArchivos {
 
             }
         }
-        ArrayList<String> cabezas = new ArrayList<>();
+        HashSet<String> cabezas = new HashSet<>();
         for(ArrayList<String> inicio: estructuraProducciones){
             cabezas.add(inicio.get(0));
         }
-
         tamanoFinal = resultado.size();
         while(tamanoFinal != tamanoInicial){
+
             ArrayList<String> temporal = new ArrayList<>();
             temporal.addAll(resultado);
             for(String s: temporal){
@@ -1543,23 +1545,49 @@ public class LectordeArchivos {
                     HashSet<String> inicio = first(s);
                     resultado.addAll(agregado);
                     resultado.addAll(inicio);
-                    if(tieneHashtag){
-                        resultado.add("#");
-                    }
 
+                    //Metodo para limpiar espacios vacios
+                    HashSet<String> tempo  = new HashSet<>();
+                    for(String r: resultado){
+                        if(!r.equals("")){
+                            tempo.add(r);
+                        }
+                    }
+                    resultado.clear();
+                    resultado.addAll(tempo);
 
                 }
-
             }
 
             tamanoInicial = tamanoFinal;
             tamanoFinal = resultado.size();
         }
+        if(tieneHashtag){
+            resultado.add("#");
+        }
+
         return resultado;
-
-
-
     }
+
+    public HashSet<String> revisarNoTerminales(HashSet<String> produccion){
+        HashSet<String> cabezas = new HashSet<>();
+        HashSet<String> remover = new HashSet<>();
+        for(String s: produccion){
+            for(ArrayList<String> inicio: estructuraProducciones){
+                if(s.equals(inicio.get(0))){
+                    produccion.addAll(follow(s));
+                    remover.add(s);
+
+                }
+            }
+
+        }
+        for(String s: remover){
+            produccion.remove(s);
+        }
+        return produccion;
+    }
+
 
     public HashSet<String> first(String peticion){
         numeroDePeticion = 0;
