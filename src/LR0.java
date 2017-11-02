@@ -1,3 +1,4 @@
+import com.sun.imageio.stream.CloseableDisposerRecord;
 import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader;
 import com.sun.xml.internal.messaging.saaj.util.transform.EfficientStreamingTransformer;
 
@@ -9,11 +10,12 @@ import java.util.HashSet;
  */
 public class LR0 {
 
-    private HashSet<ArrayList<String>> estructuraProducciones;
-    private HashSet<HashSet<String>> parser = new HashSet<>();
-    private HashSet<String> cabezas = new HashSet<>();
+    private ArrayList<ArrayList<String>> estructuraProducciones;
+    private ArrayList<ArrayList<String>> parser = new ArrayList<>();
+    private ArrayList<String> cabezas = new ArrayList<>();
     private HashSet<ArrayList<String>> contenidoClosure = new HashSet<>();
     private HashSet<ArrayList<String>> produccionesVistas = new HashSet<>();
+    private ArrayList<ArrayList<String>> temporal = new ArrayList<>();
 
 
     public LR0(ArrayList<ArrayList<String>> estructura){
@@ -21,7 +23,7 @@ public class LR0 {
             produccion.remove(".");
             cabezas.add(produccion.get(0));
         }
-        this.estructuraProducciones = new HashSet<>();
+        this.estructuraProducciones = new ArrayList<>();
         ArrayList<String> inicial = new ArrayList<>();
         inicial.add("§");
         inicial.add("=");
@@ -33,16 +35,28 @@ public class LR0 {
 
     }
 
+    public  void initialize(){
+
+        for(ArrayList<String> arreglo: estructuraProducciones){
+            System.out.println("Closure: ");
+            System.out.println(arreglo);
+            System.out.println(Closure(arreglo));
+        }
+    }
+
 /*------------------------------Funcion Closure----------------------------------------------------------------------*/
-    public HashSet<ArrayList<String>> Closure(ArrayList<String> produccion){
-        HashSet<ArrayList<String>> resultante = new HashSet<>();
+    public ArrayList<ArrayList<String>> Closure(ArrayList<String> produccion){
+        ArrayList<ArrayList<String>> resultante = new ArrayList<>();
         int index = produccion.indexOf(".");
         if(index == produccion.size()-1){
             return resultante;
         }
         String item = produccion.get(index+1);
         if(cabezas.contains(item)){
-           resultante =  reaccionEnCadena(item );
+            produccionesVistas.clear();
+            contenidoClosure.clear();
+            temporal.clear();
+            resultante =  reaccionEnCadena(item);
 
         }
         return resultante;
@@ -61,37 +75,48 @@ public class LR0 {
         return resultado;
     }
 
-    public HashSet<ArrayList<String>> produccionesPorCabeza(String cabeza){
-        HashSet<ArrayList<String>> resultado = new HashSet<>();
+    public ArrayList<ArrayList<String>> produccionesPorCabeza(String cabeza){
+        ArrayList<ArrayList<String>> resultado = new ArrayList<>();
         for(ArrayList<String> produccion: estructuraProducciones){
             if(produccion.get(0).equals(cabeza)){
-                ArrayList<String> nuevaaProduccion = agregarPunto(produccion);
-                resultado.add(produccion);
+                ArrayList<String> nuevaProduccion = agregarPunto(produccion);
+                resultado.add(nuevaProduccion);
             }
+
         }
         return resultado;
     }
 
-    public HashSet<ArrayList<String>> reaccionEnCadena(String cabeza){
-        contenidoClosure.clear();
-        HashSet<ArrayList<String>> productos = produccionesPorCabeza(cabeza);
+    public ArrayList<ArrayList<String>> reaccionEnCadena(String cabeza){
+        ArrayList<ArrayList<String>> productos = produccionesPorCabeza(cabeza);
+
+        if(!produccionesVistas.isEmpty()){
+            contenidoClosure.addAll(productos);
+        }
 
         for(ArrayList<String> item: productos){
             int index = item.indexOf(".");
             if(cabezas.contains(item.get(index + 1)) && !produccionesVistas.contains(item)){
+                if(contenidoClosure.isEmpty()){
+                    temporal.add(item);
+                }
                 produccionesVistas.add(item);
                 contenidoClosure.add(item);
-                contenidoClosure.addAll(reaccionEnCadena(item.get(0)));
+                contenidoClosure.addAll(reaccionEnCadena(item.get(index +1)));
 
             }
         }
-        return contenidoClosure;
+        for(ArrayList<String> i: temporal){
+            contenidoClosure.remove(i);
+        }
+        temporal.addAll(contenidoClosure);
+        return temporal;
     }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 /*----------------------------Funcion GOTO----------------------------------------------------------------------------*/
-    public void  GOTO(HashSet<ArrayList<String>> nodo, String transicion){
+    public void  GOTO(ArrayList<ArrayList<String>> nodo, String transicion){
 
     }
 /*--------------------------------------------------------------------------------------------------------------------*/
