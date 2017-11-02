@@ -4,6 +4,7 @@ import com.sun.xml.internal.messaging.saaj.util.transform.EfficientStreamingTran
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Created by Diego Castaneda on 01/11/2017.
@@ -27,6 +28,7 @@ public class LR0 {
         ArrayList<String> inicial = new ArrayList<>();
         inicial.add("§");
         inicial.add("=");
+        inicial.add(".");
         inicial.add(estructura.get(0).get(0));
         inicial.add("$");
 
@@ -34,16 +36,6 @@ public class LR0 {
         estructuraProducciones.addAll(estructura);
 
     }
-
-    public  void initialize(){
-
-        for(ArrayList<String> arreglo: estructuraProducciones){
-            System.out.println("Closure: ");
-            System.out.println(arreglo);
-            System.out.println(Closure(arreglo));
-        }
-    }
-
 /*------------------------------Funcion Closure----------------------------------------------------------------------*/
     public ArrayList<ArrayList<String>> Closure(ArrayList<String> produccion){
         ArrayList<ArrayList<String>> resultante = new ArrayList<>();
@@ -57,6 +49,24 @@ public class LR0 {
             contenidoClosure.clear();
             temporal.clear();
             resultante =  reaccionEnCadena(item);
+            if(!resultante.contains(produccion)){
+                ArrayList<ArrayList<String>> sustitucion = new ArrayList<>();
+
+                if(produccion.indexOf(".") == -1 ){
+                    ArrayList<String> prueba = agregarPunto(produccion);
+                    if(!resultante.contains(prueba)){
+                        sustitucion.add(prueba);
+                    }
+
+                }
+                else{
+                    sustitucion.add(produccion);
+                }
+
+                sustitucion.addAll(resultante);
+                resultante.clear();
+                resultante.addAll(sustitucion);
+            }
 
         }
         return resultante;
@@ -88,6 +98,7 @@ public class LR0 {
     }
 
     public ArrayList<ArrayList<String>> reaccionEnCadena(String cabeza){
+
         ArrayList<ArrayList<String>> productos = produccionesPorCabeza(cabeza);
 
         if(!produccionesVistas.isEmpty()){
@@ -113,11 +124,63 @@ public class LR0 {
         return temporal;
     }
 
+    public  void initialize(){
+        System.out.println("-------------------------------------------------");
+        for(ArrayList<String> arreglo: estructuraProducciones){
+            System.out.println("Produccion");
+            System.out.println(arreglo);
+            System.out.println();
+
+            System.out.println("Closure: ");
+            ArrayList<ArrayList<String>> nodazo = Closure(arreglo);
+            System.out.println(nodazo);
+            System.out.println();
+
+            System.out.println("GOTO E");
+            System.out.println(GOTO(nodazo, "E"));
+            System.out.println();
+            System.out.println("-------------------------------------------------");
+
+        }
+
+
+    }
+
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 /*----------------------------Funcion GOTO----------------------------------------------------------------------------*/
-    public void  GOTO(ArrayList<ArrayList<String>> nodo, String transicion){
+    public ArrayList<ArrayList<String>> GOTO(ArrayList<ArrayList<String>> nodo, String transicion){
+        ArrayList<ArrayList<String>> resultado = new ArrayList<>();
+        for(ArrayList<String> i: nodo){
+            int index = i.indexOf(".");
+            if(i.get(index+1).equals(transicion)){
+                resultado.add(moverPunto(i));
 
+            }
+
+        }
+        return resultado;
+
+    }
+
+    public ArrayList<String> moverPunto(ArrayList<String> Nodo){
+        ArrayList<String> resultado = new ArrayList<>();
+        int index = Nodo.indexOf(".");
+        for(int i = 0; i < index; i++){
+            resultado.add(Nodo.get(i));
+        }
+        if(index +1 < Nodo.size()){
+            resultado.add(Nodo.get(index+1));
+            resultado.add(Nodo.get(index));
+
+            for(int i = index + 2; i < Nodo.size(); i++){
+                resultado.add(Nodo.get(i));
+            }
+        }else{
+            resultado.add(".");
+
+        }
+        return resultado;
     }
 /*--------------------------------------------------------------------------------------------------------------------*/
 }
