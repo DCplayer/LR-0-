@@ -18,6 +18,9 @@ public class LR0 {
     private HashSet<ArrayList<String>> produccionesVistas = new HashSet<>();
     private ArrayList<ArrayList<String>> temporal = new ArrayList<>();
 
+    private HashSet<ArrayList<String>> T = new HashSet<>();
+    private HashSet<Transicion> E = new HashSet<>();
+
 
     public LR0(ArrayList<ArrayList<String>> estructura){
         for(ArrayList<String> produccion: estructura){
@@ -185,7 +188,10 @@ public class LR0 {
 /*-----------------------------Terminado Funcion GOTO-----------------------------------------------------------------*/
 
 /*-----------------------------Creando el Parser LR(0)-----------------------------------------------------------------*/
+    public void crearElParser(){
 
+
+    }
 /*-----------------------------Terminando  el Parser LR(0)-------------------------------------------------------------*/
 
 }
