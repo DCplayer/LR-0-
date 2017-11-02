@@ -1631,5 +1631,7 @@ public class LectordeArchivos {
         return resultado;
     }
 
-
+    public ArrayList<ArrayList<String>> getEstructuraProducciones() {
+        return estructuraProducciones;
+    }
 }

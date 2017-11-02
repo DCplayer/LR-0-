@@ -1,4 +1,5 @@
 import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader;
+import com.sun.xml.internal.messaging.saaj.util.transform.EfficientStreamingTransformer;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,15 +15,14 @@ public class LR0 {
     private HashSet<ArrayList<String>> contenidoClosure = new HashSet<>();
     private HashSet<ArrayList<String>> produccionesVistas = new HashSet<>();
 
+
     public LR0(ArrayList<ArrayList<String>> estructura){
         for(ArrayList<String> produccion: estructura){
             produccion.remove(".");
             cabezas.add(produccion.get(0));
         }
-
         this.estructuraProducciones = new HashSet<>();
         ArrayList<String> inicial = new ArrayList<>();
-
         inicial.add("§");
         inicial.add("=");
         inicial.add(estructura.get(0).get(0));
@@ -31,9 +31,8 @@ public class LR0 {
         estructuraProducciones.add(inicial);
         estructuraProducciones.addAll(estructura);
 
-
-
     }
+
 /*------------------------------Funcion Closure----------------------------------------------------------------------*/
     public HashSet<ArrayList<String>> Closure(ArrayList<String> produccion){
         HashSet<ArrayList<String>> resultante = new HashSet<>();
@@ -92,6 +91,8 @@ public class LR0 {
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 /*----------------------------Funcion GOTO----------------------------------------------------------------------------*/
-    public 
+    public void  GOTO(HashSet<ArrayList<String>> nodo, String transicion){
+
+    }
 /*--------------------------------------------------------------------------------------------------------------------*/
 }
