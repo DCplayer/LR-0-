@@ -76,6 +76,8 @@ public class LR0 {
                 resultante.addAll(sustitucion);
             }
 
+        }else{
+            resultante.add(produccion);
         }
         return resultante;
     }
@@ -125,6 +127,7 @@ public class LR0 {
 
             }
         }
+        temporal.addAll(productos);
         for(ArrayList<String> i: temporal){
             contenidoClosure.remove(i);
         }
@@ -227,7 +230,7 @@ public class LR0 {
         System.out.println("Estado1");
         System.out.println(primerEstado.getContenido());
 
-        while (tamanoFinalEstados != tamanoInicialEstados && tamanoInicialTransiciones != tamanoFinalTransiciones){
+        while (tamanoFinalEstados != tamanoInicialEstados || tamanoInicialTransiciones != tamanoFinalTransiciones){
             tamanoInicialEstados = tamanoFinalEstados;
             tamanoInicialTransiciones = tamanoFinalTransiciones;
             for(Estado state: estados){
@@ -249,16 +252,16 @@ public class LR0 {
 
     public ArrayList<ArrayList<String>> GotoClosure(ArrayList<ArrayList<String>> nodo, String transicion){
         HashSet<ArrayList<String>> resultado = new HashSet<>();
-        ArrayList<ArrayList<String>> temporal = new ArrayList<>();
+        ArrayList<ArrayList<String>> tiempo = new ArrayList<>();
         ArrayList<ArrayList<String>> movimiento = GOTO(nodo,  transicion);
         for(ArrayList<String> produccion: movimiento){
-            temporal = Closure(produccion);
-            resultado.addAll(temporal);
+            tiempo = Closure(produccion);
+            resultado.addAll(tiempo);
         }
 
-        temporal.clear();
-        temporal.addAll(resultado);
-        return temporal;
+        tiempo.clear();
+        tiempo.addAll(resultado);
+        return tiempo;
     }
 /*-----------------------------Terminando  el Parser LR(0)-------------------------------------------------------------*/
 
