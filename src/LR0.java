@@ -21,6 +21,11 @@ public class LR0 {
     private HashSet<ArrayList<String>> T = new HashSet<>();
     private HashSet<Transicion> E = new HashSet<>();
 
+    private int numeroEstado = 0;
+    private HashSet<String> alfabeto = new HashSet<>();
+    private HashSet<Estado> estados = new HashSet<>();
+    private HashSet<Transicion> transiciones = new HashSet<>();
+
 
     public LR0(ArrayList<ArrayList<String>> estructura){
         for(ArrayList<String> produccion: estructura){
@@ -189,8 +194,71 @@ public class LR0 {
 
 /*-----------------------------Creando el Parser LR(0)-----------------------------------------------------------------*/
     public void crearElParser(){
+        //Crear el Abecedario
+        for(ArrayList<String> produccion: estructuraProducciones){
+            for(String s: produccion){
+                if(!s.equals(".") && !s.equals("=")){
+                    alfabeto.add(s);
+                }
 
+            }
+        }
+        System.out.println("Alfabeto: ");
+        System.out.println(alfabeto);
+        System.out.println("Producciones Iniciales: ");
+        System.out.println(estructuraProducciones);
 
+        //Creando el primer Estado;
+        ArrayList<ArrayList<String>> elementos = Closure(estructuraProducciones.get(0));
+        HashSet<ArrayList<String>> inicial = new HashSet<>();
+        inicial.addAll(elementos);
+        Estado primerEstado = new Estado(numeroEstado, elementos);
+        numeroEstado++;
+
+        //Comenzar con los parametros que nos diran hasta cuando parar las iteraciones
+        int tamanoInicialEstados = estados.size();
+        int tamanoInicialTransiciones = transiciones.size();
+
+        estados.add(primerEstado);
+
+        int tamanoFinalEstados = estados.size();
+        int tamanoFinalTransiciones = transiciones.size();
+
+        System.out.println("Estado1");
+        System.out.println(primerEstado.getContenido());
+
+        while (tamanoFinalEstados != tamanoInicialEstados && tamanoInicialTransiciones != tamanoFinalTransiciones){
+            tamanoInicialEstados = tamanoFinalEstados;
+            tamanoInicialTransiciones = tamanoFinalTransiciones;
+            for(Estado state: estados){
+                if(!state.isRevisado()){
+                    for(String letra: alfabeto){
+                        ArrayList<ArrayList<String>> nodo = GotoClosure(state.getContenido(), letra);
+                        System.out.println(nodo);
+                        for(Estado X: estados){
+                            if(X.getContenido() == nodo){
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    public ArrayList<ArrayList<String>> GotoClosure(ArrayList<ArrayList<String>> nodo, String transicion){
+        HashSet<ArrayList<String>> resultado = new HashSet<>();
+        ArrayList<ArrayList<String>> temporal = new ArrayList<>();
+        ArrayList<ArrayList<String>> movimiento = GOTO(nodo,  transicion);
+        for(ArrayList<String> produccion: movimiento){
+            temporal = Closure(produccion);
+            resultado.addAll(temporal);
+        }
+
+        temporal.clear();
+        temporal.addAll(resultado);
+        return temporal;
     }
 /*-----------------------------Terminando  el Parser LR(0)-------------------------------------------------------------*/
 

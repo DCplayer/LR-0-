@@ -67,6 +67,7 @@ public class MainCocoR {
         //Parte del codigo que permitira verificar la presencia del Parser LR(0)
         LR0 parser = new LR0(lector.getEstructuraProducciones());
         parser.initialize();
+        parser.crearElParser();
 
 
 
