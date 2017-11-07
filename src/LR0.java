@@ -26,6 +26,8 @@ public class LR0 {
     private HashSet<Estado> estados = new HashSet<>();
     private HashSet<Transicion> transiciones = new HashSet<>();
 
+    private ArrayList<ArrayList<String>> contenidoTemporalEstado = new ArrayList<>();
+
 
     public LR0(ArrayList<ArrayList<String>> estructura){
         for(ArrayList<String> produccion: estructura){
@@ -236,6 +238,7 @@ public class LR0 {
             for(Estado state: estados){
                 if(!state.isRevisado()){
                     for(String letra: alfabeto){
+                        contenidoTemporalEstado = state.getContenido();
                         ArrayList<ArrayList<String>> nodo = GotoClosure(state.getContenido(), letra);
                         System.out.println(nodo);
                         for(Estado X: estados){
@@ -243,7 +246,10 @@ public class LR0 {
 
                             }
                         }
+
+                        state.setContenido(contenidoTemporalEstado);
                     }
+
                 }
             }
         }

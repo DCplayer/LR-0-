@@ -24,6 +24,10 @@ public class Estado {
         return contenido;
     }
 
+    public void setContenido(ArrayList<ArrayList<String>> contenido) {
+        this.contenido = contenido;
+    }
+
     public boolean isRevisado() {
         return revisado;
     }
