@@ -33,6 +33,10 @@ public class Estado {
         return revisado;
     }
 
+    public int getNumero() {
+        return numero;
+    }
+
     @Override
     public String toString(){
         return "Estado # " + this.numero+ ", Contenido: " + this.contenido ;

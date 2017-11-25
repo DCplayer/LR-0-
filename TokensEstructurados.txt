@@ -1,4 +1,3 @@
-id,letter,{,letter,},.,
+id,letter,{,letter,},EXCEPTKEYWORDS,.,
 number,digit,{,digit,},.,
-hexnumber,hexdigit,{,hexdigit,},",(,H,),",.,
 

@@ -7,12 +7,16 @@ import java.util.HashSet;
 public class Transicion {
     private HashSet<ArrayList<String>> salida = new HashSet<>();
     private HashSet<ArrayList<String>> llegada = new HashSet<>();
+    private int numeroSalida;
+    private int numeroLlegada;
     private String transicion = "";
 
-    public Transicion(HashSet<ArrayList<String>> salida , HashSet<ArrayList<String>> llegada, String transicion){
+    public Transicion(HashSet<ArrayList<String>> salida ,int numeroSalida,  HashSet<ArrayList<String>> llegada, int numeroLlegada, String transicion){
         this.transicion = transicion;
         this.salida = salida;
         this.llegada = llegada;
+        this.numeroLlegada = numeroLlegada;
+        this.numeroSalida = numeroSalida;
 
     }
 
@@ -41,5 +45,21 @@ public class Transicion {
         result = 31 * result + (llegada != null ? llegada.hashCode() : 0);
         result = 31 * result + (transicion != null ? transicion.hashCode() : 0);
         return result;
+    }
+
+    public int getNumeroSalida() {
+        return numeroSalida;
+    }
+
+    public int getNumeroLlegada() {
+        return numeroLlegada;
+    }
+
+    public String getTransicion() {
+        return transicion;
+    }
+
+    public HashSet<ArrayList<String>> getLlegada() {
+        return llegada;
     }
 }

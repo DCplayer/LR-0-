@@ -1,26 +1,19 @@
-COMPILER Test
-
+Compiler Ejemplo
 CHARACTERS
-
 letter = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".
 digit = "0123456789".
-hexdigit = digit+"ABCDEF".
 
 KEYWORDS
 if="if".
 while="while".
-
+else = "else".
 TOKENS
-id = letter{letter}.
+id = letter{letter} EXCEPT KEYWORDS.
 number = digit{digit}.
-hexnumber = hexdigit{hexdigit}"(H)".
-
+IGNORE "	"
 PRODUCTIONS
-E = T É .
-É = + T É | #.
-T = F TP.
-TP = *F TP | #.
+E = E + T | T.
+T = T * F | F.
 F = ( E ) | id.
 
-
-END Test.
+END Ejemplo.

@@ -28,6 +28,10 @@ public class LR0 {
 
     private ArrayList<ArrayList<String>> contenidoTemporalEstado = new ArrayList<>();
 
+    private ArrayList<String> peticiones = new ArrayList<>();
+    private int numeroDePeticion = 0;
+    private boolean tieneHashtag = false;
+
 
     public LR0(ArrayList<ArrayList<String>> estructura){
         for(ArrayList<String> produccion: estructura){
@@ -277,8 +281,7 @@ public class LR0 {
                             }
 
                             if(existente){
-                                System.out.println("SI EXISTE");
-                                Transicion trans = new Transicion(state.getContenido(), sustitutoEstados.get(indexEstados).getContenido(), letra);
+                                Transicion trans = new Transicion(state.getContenido(), state.getNumero(),  sustitutoEstados.get(indexEstados).getContenido(), sustitutoEstados.get(indexEstados).getNumero(),  letra);
                                 if(!transiciones.contains(trans)){
                                     temporalTransicion.add(trans);
                                 }
@@ -293,7 +296,7 @@ public class LR0 {
                                     numeroEstado++;
                                 }
 
-                                Transicion trans = new Transicion(state.getContenido(), nuevo.getContenido(), letra);
+                                Transicion trans = new Transicion(state.getContenido(), state.getNumero(),   nuevo.getContenido(), nuevo.getNumero(), letra);
                                 if(!transiciones.contains(trans)){
                                     temporalTransicion.add(trans);
                                 }
@@ -317,6 +320,10 @@ public class LR0 {
         }
         System.out.println(estados);
         System.out.println(transiciones);
+        System.out.println(estructuraProducciones);
+
+        ArrayList<ArrayList<String>> tabla = CrearLaTabla();
+        System.out.println(tabla);
 
     }
 
@@ -348,6 +355,269 @@ public class LR0 {
         respuesta.addAll(nuevo);
         return respuesta;
     }
+
+    public ArrayList<ArrayList<String>> CrearLaTabla(){
+        ArrayList<ArrayList<String>> tablaDeParseo = new ArrayList<>();
+        for (Estado state: estados){
+            ArrayList<ArrayList<String>> reduces = new ArrayList<>();
+            ArrayList<String> linea = new ArrayList<>();
+            int numeroSalida = state.getNumero();
+            linea.add(numeroSalida + "");
+
+            ArrayList<Transicion> transicionesActuales = new ArrayList<>();
+            for(Transicion transition: transiciones){
+                int numeroOrigenTrans = transition.getNumeroSalida();
+                if(numeroSalida == numeroOrigenTrans){
+                    transicionesActuales.add(transition);
+                }
+            }
+            for(String letra: alfabeto){
+                String respuesta = "";
+                int indexPunto = 0;
+                ArrayList<String> noKernel = new ArrayList<>();
+                int numeroLlegada = 0;
+                for(Transicion trans: transicionesActuales) {
+                    numeroLlegada = trans.getNumeroLlegada();
+                    if (trans.getTransicion().equals(letra)) {
+
+                        for (ArrayList<String> product : trans.getLlegada()) {
+                            if (product.indexOf(".") != 2) {
+                                noKernel = product;
+                                indexPunto = product.indexOf(".");
+                                break;
+                            }
+                        }
+                        /* Erroneo, el estado 0 nunca aparecera como llegada de ninguno!!
+                        //Revisar si tiene algun almenos un estado no kernel
+                        if (noTienePuntoMovido) {
+                            for (ArrayList<String> product : trans.getLlegada()) {
+                                if (product.get(0).equals("§")) {
+                                    noKernel = product;
+                                    indexPunto = product.indexOf(".");
+                                }
+                            }
+                        }
+                        */
+                    }
+                }
+
+                //Trabajar con el ente NoKernel y el Punto, esto te dira si lo que tenes que agregar es Shift
+                // o reduce o accept
+
+                //Caso Shift
+                if (indexPunto != noKernel.size() - 1) {
+                    respuesta = "S" + String.valueOf(numeroLlegada);
+
+                }
+                //Caso Reduce && accept
+                else if (indexPunto == noKernel.size() - 1) {
+                    //Esto solo servira para comprobar si es Accept o solo un reduce
+                    ArrayList<String> inicialProducciones = estructuraProducciones.get(0);
+                    ArrayList<String> inicialReal = new ArrayList<>();
+                    for(String s : inicialProducciones){
+                        if(!s.equals(".")){
+                            inicialReal.add(s);
+                        }
+                    }
+                    //inicialReal = produccion Inicial sin el punto
+                    ArrayList<String> noKernelComparativo = new ArrayList<>();
+                    for(int i = 0; i < noKernel.size()-1; i++){
+                        noKernelComparativo.add(noKernel.get(i));
+                    }
+
+                    //NoKernelComparativo = sabiendo que esta el punto al final, se lo quitamos y miramos si es la
+                    // produccion inicial
+
+                    if(noKernelComparativo.equals(inicialReal)){
+                        respuesta = "accep.";
+                    }
+                    else{//Revisar el Reduce en donde se encuentra y si hay error shift Reduce o Reduce Reduce
+                        int numeroProduccion = 0;
+                        for(int i = 1; i < estructuraProducciones.size(); i++){
+                            if(estructuraProducciones.get(i).equals(noKernelComparativo)){
+                                numeroProduccion = i;
+                            }
+                        }
+                        String titulo = "R" + String.valueOf(numeroProduccion);
+                        ArrayList<String> reduccion = new ArrayList<>();
+                        reduccion.add(titulo);
+                        HashSet<String> elFollowDeNoKernel = follow(noKernelComparativo.get(0));
+                        ArrayList<String> abecedario = new ArrayList<>();
+                        abecedario.addAll(alfabeto);
+                        for(String s: elFollowDeNoKernel){
+                            for(int i = 0; i < abecedario.size(); i++){
+                                if(s.equals(abecedario.get(i))){
+                                    reduccion.add(String.valueOf(i+1));
+                                }
+                            }
+                        }
+                        reduces.add(reduccion);
+
+
+                    }
+                }
+                linea.add(respuesta);
+            }
+            //POner aqui para revisar en donde hay problemas de Shift reduce o simplemente poner los Reduce en la linea
+            //En linea, revisar si, para cada reduce puesto en reduces existe problemas SR o RR, si no, solo colocarlo
+
+            for(ArrayList<String> reduccion: reduces){
+                for(int i = 1; i < reduccion.size(); i++){
+                    int numeroIndex = Integer.parseInt(reduccion.get(i));
+                    String dato = linea.get(numeroIndex);
+                    if(dato.equals("")){
+                        linea.set(numeroIndex, reduccion.get(0));
+                    }
+                    else{
+                        String subDato = dato.substring(0,1);
+                        if(subDato.equals("S")){
+                            System.out.println("Problema Shift Reduce, linea" + state.getNumero());
+                            String nuevoDato = dato + "/R" + reduccion.get(0);
+                            linea.set(numeroIndex, nuevoDato);
+                        }
+                    }
+
+                }
+            }
+
+            tablaDeParseo.add(linea);
+        }
+        return tablaDeParseo;
+    }
 /*-----------------------------Terminando  el Parser LR(0)-------------------------------------------------------------*/
+    public HashSet<String> first(String peticion){
+        numeroDePeticion = 0;
+        tieneHashtag = false;
+        HashSet<String> resultado = new HashSet<>();
+        String item = "";
+        for(int i = 0; i < peticion.length(); i++){
+            String parte = peticion.substring(i, i+1);
+            if(!parte.equals(" ")){
+                item = item + parte;
+            }
+            else{
+                peticiones.add(item);
+                item = "";
+            }
+        }
+        peticiones.add(item);
+        boolean pruebaDeFuego = true;
+        while(pruebaDeFuego){
+            if(!chequear(peticiones.get(numeroDePeticion))){
+                resultado.add(peticiones.get(numeroDePeticion));
+            }
+            else{
+                resultado.addAll(encontrado(peticiones.get(numeroDePeticion)));
+            }
+
+
+            if(!resultado.contains("#") || numeroDePeticion > peticiones.size()-1){
+                pruebaDeFuego = false;
+            }
+
+            if(resultado.contains("#")){
+                resultado.remove("#");
+                tieneHashtag = true;
+            }
+            numeroDePeticion = numeroDePeticion +1;
+        }
+
+
+
+        return resultado;
+    }
+
+    public HashSet<String>  follow(String Nodo){
+        Nodo = Nodo.replaceAll("\\s", "");
+        HashSet<String> resultado = new HashSet<>();
+        int tamanoInicial = 0;
+        int tamanoFinal = 0;
+        for(ArrayList<String> produccion: estructuraProducciones){
+            if(produccion.contains(Nodo)&& produccion.indexOf(Nodo) != 0) {
+                if(produccion.indexOf(Nodo) == produccion.size()-2){
+                    HashSet<String> temporal = follow(produccion.get(0));
+                    resultado.addAll(temporal);
+                }
+                else{
+                    if(produccion.indexOf(Nodo)+1 < produccion.size()){
+                        resultado.add(produccion.get(produccion.indexOf(Nodo)+1));
+                    }
+
+                }
+
+            }
+        }
+        HashSet<String> cabezas = new HashSet<>();
+        for(ArrayList<String> inicio: estructuraProducciones){
+            cabezas.add(inicio.get(0));
+        }
+        tamanoFinal = resultado.size();
+        while(tamanoFinal != tamanoInicial){
+
+            ArrayList<String> temporal = new ArrayList<>();
+            temporal.addAll(resultado);
+            for(String s: temporal){
+                if(cabezas.contains(s)){
+                    HashSet<String> agregado = follow(s);
+                    HashSet<String> inicio = first(s);
+                    resultado.addAll(agregado);
+                    resultado.addAll(inicio);
+
+                    //Metodo para limpiar espacios vacios
+                    HashSet<String> tempo  = new HashSet<>();
+                    for(String r: resultado){
+                        if(!r.equals("")){
+                            tempo.add(r);
+                        }
+                    }
+                    resultado.clear();
+                    resultado.addAll(tempo);
+
+                }
+            }
+
+            tamanoInicial = tamanoFinal;
+            tamanoFinal = resultado.size();
+        }
+        if(tieneHashtag){
+            resultado.add("#");
+        }
+
+        return resultado;
+    }
+
+    public boolean chequear(String s){
+        boolean respuesta = false;
+        for(ArrayList<String> i: estructuraProducciones){
+            if(i.get(0).equals(s)){
+                respuesta = true;
+                break;
+            }
+        }
+        return respuesta;
+
+    }
+
+    public HashSet<String> encontrado(String conocido){
+        HashSet<String> contenidoFirsteno = new HashSet<>();
+        for(ArrayList<String> producciones: estructuraProducciones){
+            if(producciones.get(0).equals(conocido)){
+
+                String firstino = producciones.get(2);
+                if(chequear(firstino)){
+                    contenidoFirsteno.addAll(encontrado(firstino));
+                }
+                else{
+                    contenidoFirsteno.add(firstino);
+                }
+
+            }
+        }
+        if(contenidoFirsteno.size() == 0){
+            contenidoFirsteno.add(conocido);
+        }
+        return contenidoFirsteno;
+    }
 
 }
+
