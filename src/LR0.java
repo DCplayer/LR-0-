@@ -146,11 +146,13 @@ public class LR0 {
 
             System.out.println("Closure: ");
             ArrayList<ArrayList<String>> nodazo = Closure(arreglo);
+            HashSet<ArrayList<String>> nodazazo = new HashSet<>();
+            nodazazo.addAll(nodazo);
             System.out.println(nodazo);
             System.out.println();
 
             System.out.println("GOTO E");
-            System.out.println(GOTO(nodazo, "E"));
+            System.out.println(GOTO(nodazazo, "E"));
             System.out.println();
             System.out.println("-------------------------------------------------");
 
@@ -162,14 +164,16 @@ public class LR0 {
 /*----------------------------Termina Funcion Closure-----------------------------------------------------------------*/
 
 /*----------------------------Funcion GOTO----------------------------------------------------------------------------*/
-    public ArrayList<ArrayList<String>> GOTO(ArrayList<ArrayList<String>> nodo, String transicion){
+    public ArrayList<ArrayList<String>> GOTO(HashSet<ArrayList<String>> nodo, String transicion){
         ArrayList<ArrayList<String>> resultado = new ArrayList<>();
         for(ArrayList<String> i: nodo){
             int index = i.indexOf(".");
-            if(i.get(index+1).equals(transicion)){
-                resultado.add(moverPunto(i));
-
+            if(index < i.size()-1){
+                if(i.get(index+1).equals(transicion)){
+                    resultado.add(moverPunto(i));
+                }
             }
+
 
         }
         return resultado;
@@ -217,7 +221,7 @@ public class LR0 {
         ArrayList<ArrayList<String>> elementos = Closure(estructuraProducciones.get(0));
         HashSet<ArrayList<String>> inicial = new HashSet<>();
         inicial.addAll(elementos);
-        Estado primerEstado = new Estado(numeroEstado, elementos);
+        Estado primerEstado = new Estado(numeroEstado, inicial);
         numeroEstado++;
 
         //Comenzar con los parametros que nos diran hasta cuando parar las iteraciones
@@ -235,32 +239,95 @@ public class LR0 {
         while (tamanoFinalEstados != tamanoInicialEstados || tamanoInicialTransiciones != tamanoFinalTransiciones){
             tamanoInicialEstados = tamanoFinalEstados;
             tamanoInicialTransiciones = tamanoFinalTransiciones;
+            HashSet<Estado> temporalEstados = new HashSet<>();
+            HashSet<Transicion> temporalTransicion = new HashSet<>();
             for(Estado state: estados){
                 if(!state.isRevisado()){
+                    state.setRevisado(true);
                     for(String letra: alfabeto){
-                        contenidoTemporalEstado = state.getContenido();
+                        contenidoTemporalEstado.clear();
+                        contenidoTemporalEstado.addAll(state.getContenido());
+                        HashSet<ArrayList<String>> comportamientoEstados = new HashSet<>();
+                        comportamientoEstados.addAll(contenidoTemporalEstado);
+
                         ArrayList<ArrayList<String>> nodo = GotoClosure(state.getContenido(), letra);
-                        System.out.println(nodo);
-                        for(Estado X: estados){
-                            if(X.getContenido() == nodo){
+                        ArrayList<ArrayList<String>> remplazoRapido = noRepetidos(nodo);
+                        nodo.clear();
+                        nodo.addAll(remplazoRapido);
+
+                        //--------Crear un sustituto de estados solo para revisar nuevos estados------------------------
+
+                        ArrayList<Estado> sustitutoEstados = new ArrayList<>();
+                        ArrayList<Transicion> sustitutoTransiciones = new ArrayList<>();
+                        sustitutoEstados.addAll(estados);
+                        sustitutoTransiciones.addAll(transiciones);
+
+                        if(nodo.isEmpty()){
+
+                        }
+                        else{//Nodo no vacio
+                            //Comprobar si el estado recien procesado ya existe
+                            boolean existente = false;
+                            int indexEstados = 0;
+                            for(int i = 0; i < estados.size(); i++){
+                                if(sustitutoEstados.get(i).equals(nodo)){
+                                    existente = true;
+                                    indexEstados = i;
+                                }
+                            }
+
+                            if(existente){
+                                System.out.println("SI EXISTE");
+                                Transicion trans = new Transicion(state.getContenido(), sustitutoEstados.get(indexEstados).getContenido(), letra);
+                                if(!transiciones.contains(trans)){
+                                    temporalTransicion.add(trans);
+                                }
 
                             }
+                            else{
+                                HashSet<ArrayList<String>> formato = new HashSet<>();
+                                formato.addAll(nodo);
+                                Estado nuevo = new Estado(numeroEstado, formato);
+                                if(!estados.contains(nuevo)){
+                                    temporalEstados.add(nuevo);
+                                    numeroEstado++;
+                                }
+
+                                Transicion trans = new Transicion(state.getContenido(), nuevo.getContenido(), letra);
+                                if(!transiciones.contains(trans)){
+                                    temporalTransicion.add(trans);
+                                }
+                            }
                         }
-
-                        state.setContenido(contenidoTemporalEstado);
+                        state.setContenido(comportamientoEstados);
                     }
-
                 }
             }
+            estados.addAll(temporalEstados);
+            tamanoFinalEstados = estados.size();
+            transiciones.addAll(temporalTransicion);
+            tamanoFinalTransiciones = transiciones.size();
+
+            System.out.println("NUMERO DE ESTADOS");
+            System.out.println(estados.size());
+            System.out.println("NUMERO DE TRANSICIONES");
+            System.out.println(transiciones.size());
+
+
         }
+        System.out.println(estados);
+        System.out.println(transiciones);
 
     }
 
-    public ArrayList<ArrayList<String>> GotoClosure(ArrayList<ArrayList<String>> nodo, String transicion){
+    public ArrayList<ArrayList<String>> GotoClosure(HashSet<ArrayList<String>> NodoInterno, String transicion){
         HashSet<ArrayList<String>> resultado = new HashSet<>();
         ArrayList<ArrayList<String>> tiempo = new ArrayList<>();
-        ArrayList<ArrayList<String>> movimiento = GOTO(nodo,  transicion);
-        for(ArrayList<String> produccion: movimiento){
+        ArrayList<ArrayList<String>> movimiento = GOTO(NodoInterno,  transicion);
+        ArrayList<ArrayList<String>> señuelo = new ArrayList<>();
+        señuelo.addAll(movimiento);
+        resultado.addAll(movimiento);
+        for(ArrayList<String> produccion: señuelo){
             tiempo = Closure(produccion);
             resultado.addAll(tiempo);
         }
@@ -268,6 +335,18 @@ public class LR0 {
         tiempo.clear();
         tiempo.addAll(resultado);
         return tiempo;
+    }
+
+    public ArrayList<ArrayList<String>> noRepetidos(ArrayList<ArrayList<String>> lista){
+        HashSet<ArrayList<String>> nuevo = new HashSet<>();
+        for(ArrayList<String> ente: lista){
+            if(!ente.isEmpty()){
+                nuevo.add(ente);
+            }
+        }
+        ArrayList<ArrayList<String>> respuesta = new ArrayList<>();
+        respuesta.addAll(nuevo);
+        return respuesta;
     }
 /*-----------------------------Terminando  el Parser LR(0)-------------------------------------------------------------*/
 

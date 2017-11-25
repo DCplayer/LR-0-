@@ -1,3 +1,4 @@
+import javax.net.ssl.SSLEngineResult;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -6,10 +7,10 @@ import java.util.HashSet;
  */
 public class Estado {
     private int numero;
-    private ArrayList<ArrayList<String>> contenido;
+    private HashSet<ArrayList<String>> contenido;
     private boolean revisado;
 
-    public Estado(int numero, ArrayList<ArrayList<String>> contenido){
+    public Estado(int numero, HashSet<ArrayList<String>> contenido){
         this.contenido = contenido;
         this.numero = numero;
         revisado = false;
@@ -20,11 +21,11 @@ public class Estado {
         this.revisado = revisado;
     }
 
-    public ArrayList<ArrayList<String>> getContenido() {
+    public HashSet<ArrayList<String>> getContenido() {
         return contenido;
     }
 
-    public void setContenido(ArrayList<ArrayList<String>> contenido) {
+    public void setContenido(HashSet<ArrayList<String>> contenido) {
         this.contenido = contenido;
     }
 
@@ -32,5 +33,24 @@ public class Estado {
         return revisado;
     }
 
+    @Override
+    public String toString(){
+        return "Estado # " + this.numero+ ", Contenido: " + this.contenido ;
+    }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Estado estado = (Estado) o;
+
+        return contenido != null ? contenido.equals(estado.contenido) : estado.contenido == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return contenido != null ? contenido.hashCode() : 0;
+    }
 }
