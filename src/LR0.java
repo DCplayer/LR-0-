@@ -434,14 +434,14 @@ public class LR0 {
         }
         //---------------------------------------------------------------------
         //Creando la tabla en relacion a las transiciones que existen.---------
-        for(Transicion transition: transiciones){
-            int numeroSalida = transition.getNumeroSalida() +1 ;
+        for(Transicion transition: transiciones) {
+            int numeroSalida = transition.getNumeroSalida() + 1;
             String letra = transition.getTransicion();
-            int indexColumna = abecedario.indexOf(letra) + 1 ;
+            int indexColumna = abecedario.indexOf(letra) + 1;
 
             //Linea de la tabla, que tendra que ser remplazada dentro de este algoritmo y luego en tabla(numeroSalida)
             ArrayList<String> lineaRepuesto = tabla.get(numeroSalida);
-            HashSet<ArrayList<String> >produccionLlegada = transition.getLlegada();
+            HashSet<ArrayList<String>> produccionLlegada = transition.getLlegada();
 
             //Variables para encontrar lo que se debe de sobreescribir segun produccion de llegada
             boolean HayTransiciones = false;
@@ -456,10 +456,10 @@ public class LR0 {
             }
 
             //POSIBLES ERRORES
-            if(noKernel.size() >= 1){
+            if (noKernel.size() >= 1) {
 
                 String respuesta = "";
-                for(int i = 0; i < noKernel.size(); i++){
+                for (int i = 0; i < noKernel.size(); i++) {
                     int punto = indexPunto.get(i);
                     ArrayList<String> producto = noKernel.get(i);
 
@@ -467,22 +467,88 @@ public class LR0 {
                     lineaRepuesto.set(indexColumna, titulo);
                     tabla.set(numeroSalida, lineaRepuesto);
 
-                    if(punto != producto.size()-1){
-                        if(!producto.get(punto +1).equals("$") ){
+                    if (punto != producto.size() - 1) {
+                        if (!producto.get(punto + 1).equals("$")) {
 
 
                         }
                     }
 
-                   //Crear en donde se van a poner las producciones y si presenta error por ponerse encima de algo
+                    //Crear en donde se van a poner las producciones y si presenta error por ponerse encima de algo
+                }
+            }
+        }
+        for(Estado state: estados){
+            int numero = state.getNumero();
+            String titulo = "R";
+            ArrayList<String> linea = tabla.get(numero +1);
+            ArrayList<ArrayList<String>> noKernel2 = new ArrayList<>();
+
+            for (ArrayList<String> product : state.getContenido()) {
+                if (product.indexOf(".") == product.size()-1) {
+                    noKernel2.add(product);
+
+                }
+            }
+            for(ArrayList<String> reducciones: noKernel2){
+                HashSet<String> followKernel = follow(reducciones.get(0));
+                //Determinar columnas en las que va a ir R#, indicesAlfabeto = columnasParaR#
+                ArrayList<Integer> indicesAlfabeto = new ArrayList<>();
+                for(String s: followKernel){
+                    int numeral = abecedario.indexOf(s) + 1;
+                    indicesAlfabeto.add(numeral);
+                }
+                //Determinar el # de R#, mejorProduct = produccionSinPunto
+
+                ArrayList<String> mejorProduct = new ArrayList<>();
+                for(int i = 0; i < reducciones.size()-1; i++){
+                    mejorProduct.add(reducciones.get(i));
+                }
+                //Comprobar que produccion se esta viendo
+                int numeroHashtag = 0;
+                for(int i = 0; i < estructuraProducciones.size(); i++){
+                    ArrayList<String> comparativo = estructuraProducciones.get(i);
+                    if(i == 0){
+                        //Mejorar la primera produccion para que no tenga punto
+                        comparativo.remove(".");
+
                     }
-            }
-            for(Estado state: estados){
-                int numero = state.getNumero();
-                String titulo = "R";
 
-            }
+                    if(mejorProduct.equals(comparativo)){
+                        numeroHashtag = i;
+                    }
+                }
+                if(numeroHashtag == 0){
+                    //Caso accept
+                    titulo = "accep";
+                    linea.set(1, titulo);
+                }
+                else{
+                    //Reduce
+                    titulo = titulo + String.valueOf(numeroHashtag);
+                    for(Integer x: indicesAlfabeto){
+                        String resultado = linea.get(x);
+                        if(resultado.equals("-")){
+                            linea.set(x, titulo);
+                        }
+                        else{
+                            if(!titulo.equals(resultado)){
 
+                                if(resultado.startsWith("S")){
+                                    System.out.println("Error Shift Reduce, linea: " + numero);
+                                    titulo = titulo + "/" + resultado;
+                                    linea.set(x, titulo);
+                                }
+                                else{
+                                    System.out.println("Error Reduce-Reduce, linea: " + numero);
+                                    titulo = titulo + "/" + resultado;
+                                    linea.set(x, titulo);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         //---------------------------------------------------------------------
         return tabla;
