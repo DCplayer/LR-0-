@@ -664,6 +664,22 @@ public class LR0 {
         if(tieneHashtag){
             resultado.add("#");
         }
+        if (resultado.isEmpty()){
+            HashSet<String> metaFollow = new HashSet<>();
+            ArrayList<String> Salvation = new ArrayList<>();
+            for(int i = 1; i < estructuraProducciones.size(); i++){
+                ArrayList<String> estructura = estructuraProducciones.get(i);
+                if(estructura.get(estructura.size()-1).equals(Nodo)){
+                    Salvation.add(estructura.get(0));
+                }
+            }
+            for(String s: Salvation){
+                HashSet<String> temporario = follow(s);
+                metaFollow.addAll(temporario);
+
+            }
+            resultado.addAll(metaFollow);
+        }
 
         return resultado;
     }
