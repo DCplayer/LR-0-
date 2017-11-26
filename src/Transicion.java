@@ -59,6 +59,10 @@ public class Transicion {
         return transicion;
     }
 
+    public HashSet<ArrayList<String>> getSalida() {
+        return salida;
+    }
+
     public HashSet<ArrayList<String>> getLlegada() {
         return llegada;
     }

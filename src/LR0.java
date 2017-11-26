@@ -216,6 +216,21 @@ public class LR0 {
 
             }
         }
+        for(int i = 0; i< estructuraProducciones.size(); i++){
+            if(estructuraProducciones.get(i).contains("$")){
+                if(!estructuraProducciones.get(i).get(0).equals("§")){
+                    ArrayList<String> remplazo = new ArrayList<>();
+                    for(String s: estructuraProducciones.get(i)){
+                        if(!s.equals("$")){
+                            remplazo.add(s);
+                        }
+                    }
+                    estructuraProducciones.set(i, remplazo);
+                }
+            }
+        }
+
+
         System.out.println("Alfabeto: ");
         System.out.println(alfabeto);
         System.out.println("Producciones Iniciales: ");
@@ -232,6 +247,11 @@ public class LR0 {
         int tamanoInicialEstados = estados.size();
         int tamanoInicialTransiciones = transiciones.size();
 
+        for(ArrayList<String> producciones: primerEstado.getContenido()){
+            if(producciones.get(producciones.size()-1).equals("$") && !producciones.get(0).equals("§")){
+                producciones.remove("$");
+            }
+        }
         estados.add(primerEstado);
 
         int tamanoFinalEstados = estados.size();
@@ -239,6 +259,8 @@ public class LR0 {
 
         System.out.println("Estado1");
         System.out.println(primerEstado.getContenido());
+
+
 
         while (tamanoFinalEstados != tamanoInicialEstados || tamanoInicialTransiciones != tamanoFinalTransiciones){
             tamanoInicialEstados = tamanoFinalEstados;
@@ -291,7 +313,16 @@ public class LR0 {
                                 HashSet<ArrayList<String>> formato = new HashSet<>();
                                 formato.addAll(nodo);
                                 Estado nuevo = new Estado(numeroEstado, formato);
-                                if(!estados.contains(nuevo)){
+                                boolean adentroDeEstados = false;
+                                int numeroTemporal = 0;
+                                for (Estado EST: estados){
+                                    if(EST.getContenido().equals(nuevo.getContenido())){
+                                        nuevo = EST;
+                                        adentroDeEstados = true;
+                                        break;
+                                    }
+                                }
+                                if(!adentroDeEstados){
                                     temporalEstados.add(nuevo);
                                     numeroEstado++;
                                 }
@@ -343,6 +374,22 @@ public class LR0 {
 
         tiempo.clear();
         tiempo.addAll(resultado);
+        for(int i = 0; i < tiempo.size(); i++){
+            if(tiempo.get(i).contains("$")){
+                if(!tiempo.get(i).get(0).equals("§")){
+                    ArrayList<String> remplazo = new ArrayList<>();
+                    for(String s: tiempo.get(i)){
+                        if(!s.equals("$")){
+                            remplazo.add(s);
+                        }
+
+                    }
+                    tiempo.set(i, remplazo);
+                }
+            }
+        }
+
+
         return tiempo;
     }
 
@@ -384,7 +431,6 @@ public class LR0 {
                 linea.add("-");
             }
             tabla.add(linea);
-
         }
         //---------------------------------------------------------------------
         //Creando la tabla en relacion a las transiciones que existen.---------
@@ -417,90 +463,25 @@ public class LR0 {
                     int punto = indexPunto.get(i);
                     ArrayList<String> producto = noKernel.get(i);
 
-                    //REDUCE O ACCEPT
-                    if(punto == producto.size()-1){
-                        //primero revisar si es accept
-                        //Esto solo servira para comprobar si es Accept o solo un reduce
-                        ArrayList<String> inicialProducciones = estructuraProducciones.get(0);
-                        ArrayList<String> inicialReal = new ArrayList<>();
-                        for(String s : inicialProducciones){
-                            if(!s.equals(".")){
-                                inicialReal.add(s);
-                            }
-                        }
-                        //inicialReal = produccion Inicial sin el punto
-                        ArrayList<String> noKernelComparativo = new ArrayList<>();
-                        for(int j = 0; j < producto.size()-1; j++){
-                            noKernelComparativo.add(producto.get(j));
-                        }
+                    String titulo = "S" + String.valueOf(transition.getNumeroLlegada());
+                    lineaRepuesto.set(indexColumna, titulo);
+                    tabla.set(numeroSalida, lineaRepuesto);
 
-                        //NoKernelComparativo = sabiendo que esta el punto al final, se lo quitamos y miramos si es la
-                        // produccion inicial
-
-                        if(noKernelComparativo.equals(inicialReal)) {
-                            respuesta = "accep.";
-
-                        }
-                        else{//Para cualquir otro reduce que no sea el de accept
-                            int numeroProduccion = 0;
-                            for(int j = 1; j < estructuraProducciones.size(); j++){
-                                if(estructuraProducciones.get(j).equals(noKernelComparativo)){
-                                    numeroProduccion = j;
-                                }
-                            }
-                            String titulo = "R" + String.valueOf(numeroProduccion);
+                    if(punto != producto.size()-1){
+                        if(!producto.get(punto +1).equals("$") ){
 
 
-                            HashSet<String> followKernel = follow(producto.get(0));
-                            ArrayList<Integer> columnas = new ArrayList<>();
-                            for(String s: followKernel){
-                                columnas.add(abecedario.indexOf(s) + 1);
-                            }
-                            for(Integer columna: columnas){
-                                lineaRepuesto = tabla.get(numeroSalida);
-                                String contenido = lineaRepuesto.get(columna);
-                                if(!contenido.equals("-")){
-                                    if(contenido.substring(0,1).equals("S")){
-                                        int numeroOriginal = numeroSalida-1;
-                                        System.out.println("Problema Shift-Reduce, linea: " + numeroOriginal);
-                                        contenido = contenido + "/" + titulo;
-                                        lineaRepuesto.set(columna, contenido);
-                                        tabla.set(numeroSalida, lineaRepuesto);
-
-                                    }
-                                    else if(contenido.substring(0,1).equals("R")){
-                                        int numeroOriginal = numeroSalida-1;
-                                        System.out.println("Problema Reduce-Reduce, linea: " + numeroOriginal);
-                                        contenido = contenido + "/" + titulo;
-                                        lineaRepuesto.set(columna, contenido);
-                                        tabla.set(numeroSalida, lineaRepuesto);
-
-                                    }
-                                    else{
-                                        //Aqui es en donde podria encontrar un accept entonces no creo que se debe
-                                        //de hacer algo :D
-                                    }
-                                }
-                                else{
-                                    lineaRepuesto.set(columna, titulo);
-                                    tabla.set(numeroSalida, lineaRepuesto);
-                                }
-                            }
                         }
                     }
-                    //SHIFT
-                    else{
 
-                        String titulo = "S" + String.valueOf(transition.getNumeroLlegada());
-                        lineaRepuesto.set(indexColumna, titulo);
-                        tabla.set(numeroSalida, lineaRepuesto);
-
-
-                        }//Crear en donde se van a poner las producciones y si presenta error por ponerse encima de algo
+                   //Crear en donde se van a poner las producciones y si presenta error por ponerse encima de algo
                     }
+            }
+            for(Estado state: estados){
+                int numero = state.getNumero();
+                String titulo = "R";
 
             }
-
 
         }
         //---------------------------------------------------------------------
