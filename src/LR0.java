@@ -318,12 +318,14 @@ public class LR0 {
 
 
         }
+
         System.out.println(estados);
         System.out.println(transiciones);
         System.out.println(estructuraProducciones);
 
         ArrayList<ArrayList<String>> tabla = CrearLaTabla();
         System.out.println(tabla);
+        System.out.println(alfabeto);
 
     }
 
@@ -357,133 +359,154 @@ public class LR0 {
     }
 
     public ArrayList<ArrayList<String>> CrearLaTabla(){
-        ArrayList<ArrayList<String>> tablaDeParseo = new ArrayList<>();
-        for (Estado state: estados){
-            ArrayList<ArrayList<String>> reduces = new ArrayList<>();
-            ArrayList<String> linea = new ArrayList<>();
-            int numeroSalida = state.getNumero();
-            linea.add(numeroSalida + "");
+        ArrayList<ArrayList<String>> tabla = new ArrayList<>();
+        ArrayList<String> abecedario = new ArrayList<>();
+        abecedario.addAll(alfabeto);
 
-            ArrayList<Transicion> transicionesActuales = new ArrayList<>();
-            for(Transicion transition: transiciones){
-                int numeroOrigenTrans = transition.getNumeroSalida();
-                if(numeroSalida == numeroOrigenTrans){
-                    transicionesActuales.add(transition);
-                }
-            }
-            for(String letra: alfabeto){
-                String respuesta = "";
-                int indexPunto = 0;
-                ArrayList<String> noKernel = new ArrayList<>();
-                int numeroLlegada = 0;
-                for(Transicion trans: transicionesActuales) {
-                    numeroLlegada = trans.getNumeroLlegada();
-                    if (trans.getTransicion().equals(letra)) {
-
-                        for (ArrayList<String> product : trans.getLlegada()) {
-                            if (product.indexOf(".") != 2) {
-                                noKernel = product;
-                                indexPunto = product.indexOf(".");
-                                break;
-                            }
-                        }
-                        /* Erroneo, el estado 0 nunca aparecera como llegada de ninguno!!
-                        //Revisar si tiene algun almenos un estado no kernel
-                        if (noTienePuntoMovido) {
-                            for (ArrayList<String> product : trans.getLlegada()) {
-                                if (product.get(0).equals("§")) {
-                                    noKernel = product;
-                                    indexPunto = product.indexOf(".");
-                                }
-                            }
-                        }
-                        */
-                    }
-                }
-
-                //Trabajar con el ente NoKernel y el Punto, esto te dira si lo que tenes que agregar es Shift
-                // o reduce o accept
-
-                //Caso Shift
-                if (indexPunto != noKernel.size() - 1) {
-                    respuesta = "S" + String.valueOf(numeroLlegada);
-
-                }
-                //Caso Reduce && accept
-                else if (indexPunto == noKernel.size() - 1) {
-                    //Esto solo servira para comprobar si es Accept o solo un reduce
-                    ArrayList<String> inicialProducciones = estructuraProducciones.get(0);
-                    ArrayList<String> inicialReal = new ArrayList<>();
-                    for(String s : inicialProducciones){
-                        if(!s.equals(".")){
-                            inicialReal.add(s);
-                        }
-                    }
-                    //inicialReal = produccion Inicial sin el punto
-                    ArrayList<String> noKernelComparativo = new ArrayList<>();
-                    for(int i = 0; i < noKernel.size()-1; i++){
-                        noKernelComparativo.add(noKernel.get(i));
-                    }
-
-                    //NoKernelComparativo = sabiendo que esta el punto al final, se lo quitamos y miramos si es la
-                    // produccion inicial
-
-                    if(noKernelComparativo.equals(inicialReal)){
-                        respuesta = "accep.";
-                    }
-                    else{//Revisar el Reduce en donde se encuentra y si hay error shift Reduce o Reduce Reduce
-                        int numeroProduccion = 0;
-                        for(int i = 1; i < estructuraProducciones.size(); i++){
-                            if(estructuraProducciones.get(i).equals(noKernelComparativo)){
-                                numeroProduccion = i;
-                            }
-                        }
-                        String titulo = "R" + String.valueOf(numeroProduccion);
-                        ArrayList<String> reduccion = new ArrayList<>();
-                        reduccion.add(titulo);
-                        HashSet<String> elFollowDeNoKernel = follow(noKernelComparativo.get(0));
-                        ArrayList<String> abecedario = new ArrayList<>();
-                        abecedario.addAll(alfabeto);
-                        for(String s: elFollowDeNoKernel){
-                            for(int i = 0; i < abecedario.size(); i++){
-                                if(s.equals(abecedario.get(i))){
-                                    reduccion.add(String.valueOf(i+1));
-                                }
-                            }
-                        }
-                        reduces.add(reduccion);
-
-
-                    }
-                }
-                linea.add(respuesta);
-            }
-            //POner aqui para revisar en donde hay problemas de Shift reduce o simplemente poner los Reduce en la linea
-            //En linea, revisar si, para cada reduce puesto en reduces existe problemas SR o RR, si no, solo colocarlo
-
-            for(ArrayList<String> reduccion: reduces){
-                for(int i = 1; i < reduccion.size(); i++){
-                    int numeroIndex = Integer.parseInt(reduccion.get(i));
-                    String dato = linea.get(numeroIndex);
-                    if(dato.equals("")){
-                        linea.set(numeroIndex, reduccion.get(0));
-                    }
-                    else{
-                        String subDato = dato.substring(0,1);
-                        if(subDato.equals("S")){
-                            System.out.println("Problema Shift Reduce, linea" + state.getNumero());
-                            String nuevoDato = dato + "/R" + reduccion.get(0);
-                            linea.set(numeroIndex, nuevoDato);
-                        }
-                    }
-
-                }
+        //Crear la Tabla inicial, vacia----------------------------------------
+        ArrayList<String> primeralinea = new ArrayList<>();
+        primeralinea.add("#");
+        for(String s: abecedario){
+            if(!s.equals("§")){
+                primeralinea.add(s);
             }
 
-            tablaDeParseo.add(linea);
         }
-        return tablaDeParseo;
+        abecedario.remove("§");
+        int tamanoLinea = primeralinea.size();
+        tabla.add(primeralinea);
+
+
+        for(int i = 0; i < estados.size(); i++ ){
+            ArrayList<String> linea = new ArrayList<>();
+            linea.add(String.valueOf(i));
+            for(int j = 1; j<tamanoLinea; j++){
+                linea.add("-");
+            }
+            tabla.add(linea);
+
+        }
+        //---------------------------------------------------------------------
+        //Creando la tabla en relacion a las transiciones que existen.---------
+        for(Transicion transition: transiciones){
+            int numeroSalida = transition.getNumeroSalida() +1 ;
+            String letra = transition.getTransicion();
+            int indexColumna = abecedario.indexOf(letra) + 1 ;
+
+            //Linea de la tabla, que tendra que ser remplazada dentro de este algoritmo y luego en tabla(numeroSalida)
+            ArrayList<String> lineaRepuesto = tabla.get(numeroSalida);
+            HashSet<ArrayList<String> >produccionLlegada = transition.getLlegada();
+
+            //Variables para encontrar lo que se debe de sobreescribir segun produccion de llegada
+            boolean HayTransiciones = false;
+            ArrayList<Integer> indexPunto = new ArrayList<>();
+            ArrayList<ArrayList<String>> noKernel = new ArrayList<>();
+            for (ArrayList<String> product : produccionLlegada) {
+                if (product.indexOf(".") != 2) {
+                    noKernel.add(product);
+                    indexPunto.add(product.indexOf("."));
+
+                }
+            }
+
+            //POSIBLES ERRORES
+            if(noKernel.size() >= 1){
+
+                String respuesta = "";
+                for(int i = 0; i < noKernel.size(); i++){
+                    int punto = indexPunto.get(i);
+                    ArrayList<String> producto = noKernel.get(i);
+
+                    //REDUCE O ACCEPT
+                    if(punto == producto.size()-1){
+                        //primero revisar si es accept
+                        //Esto solo servira para comprobar si es Accept o solo un reduce
+                        ArrayList<String> inicialProducciones = estructuraProducciones.get(0);
+                        ArrayList<String> inicialReal = new ArrayList<>();
+                        for(String s : inicialProducciones){
+                            if(!s.equals(".")){
+                                inicialReal.add(s);
+                            }
+                        }
+                        //inicialReal = produccion Inicial sin el punto
+                        ArrayList<String> noKernelComparativo = new ArrayList<>();
+                        for(int j = 0; j < producto.size()-1; j++){
+                            noKernelComparativo.add(producto.get(j));
+                        }
+
+                        //NoKernelComparativo = sabiendo que esta el punto al final, se lo quitamos y miramos si es la
+                        // produccion inicial
+
+                        if(noKernelComparativo.equals(inicialReal)) {
+                            respuesta = "accep.";
+
+                        }
+                        else{//Para cualquir otro reduce que no sea el de accept
+                            int numeroProduccion = 0;
+                            for(int j = 1; j < estructuraProducciones.size(); j++){
+                                if(estructuraProducciones.get(j).equals(noKernelComparativo)){
+                                    numeroProduccion = j;
+                                }
+                            }
+                            String titulo = "R" + String.valueOf(numeroProduccion);
+
+
+                            HashSet<String> followKernel = follow(producto.get(0));
+                            ArrayList<Integer> columnas = new ArrayList<>();
+                            for(String s: followKernel){
+                                columnas.add(abecedario.indexOf(s) + 1);
+                            }
+                            for(Integer columna: columnas){
+                                lineaRepuesto = tabla.get(numeroSalida);
+                                String contenido = lineaRepuesto.get(columna);
+                                if(!contenido.equals("-")){
+                                    if(contenido.substring(0,1).equals("S")){
+                                        int numeroOriginal = numeroSalida-1;
+                                        System.out.println("Problema Shift-Reduce, linea: " + numeroOriginal);
+                                        contenido = contenido + "/" + titulo;
+                                        lineaRepuesto.set(columna, contenido);
+                                        tabla.set(numeroSalida, lineaRepuesto);
+
+                                    }
+                                    else if(contenido.substring(0,1).equals("R")){
+                                        int numeroOriginal = numeroSalida-1;
+                                        System.out.println("Problema Reduce-Reduce, linea: " + numeroOriginal);
+                                        contenido = contenido + "/" + titulo;
+                                        lineaRepuesto.set(columna, contenido);
+                                        tabla.set(numeroSalida, lineaRepuesto);
+
+                                    }
+                                    else{
+                                        //Aqui es en donde podria encontrar un accept entonces no creo que se debe
+                                        //de hacer algo :D
+                                    }
+                                }
+                                else{
+                                    lineaRepuesto.set(columna, titulo);
+                                    tabla.set(numeroSalida, lineaRepuesto);
+                                }
+                            }
+                        }
+                    }
+                    //SHIFT
+                    else{
+
+                        String titulo = "S" + String.valueOf(transition.getNumeroLlegada());
+                        lineaRepuesto.set(indexColumna, titulo);
+                        tabla.set(numeroSalida, lineaRepuesto);
+
+
+                        }//Crear en donde se van a poner las producciones y si presenta error por ponerse encima de algo
+                    }
+
+            }
+
+
+        }
+        //---------------------------------------------------------------------
+        return tabla;
     }
+
 /*-----------------------------Terminando  el Parser LR(0)-------------------------------------------------------------*/
     public HashSet<String> first(String peticion){
         numeroDePeticion = 0;
@@ -533,14 +556,26 @@ public class LR0 {
         int tamanoInicial = 0;
         int tamanoFinal = 0;
         for(ArrayList<String> produccion: estructuraProducciones){
-            if(produccion.contains(Nodo)&& produccion.indexOf(Nodo) != 0) {
-                if(produccion.indexOf(Nodo) == produccion.size()-2){
-                    HashSet<String> temporal = follow(produccion.get(0));
-                    resultado.addAll(temporal);
+            ArrayList<Integer> numeroIndices = new ArrayList<>();
+
+            for(int i = 0; i < produccion.size(); i++){
+                if(produccion.get(i).equals(Nodo)){
+                    numeroIndices.add(i);
                 }
-                else{
-                    if(produccion.indexOf(Nodo)+1 < produccion.size()){
+
+            }
+            for(Integer numero: numeroIndices){
+                if(produccion.contains(Nodo)&& numero != 0) {
+                    if(numero == produccion.size()-2){
+                        HashSet<String> temporal = follow(produccion.get(0));
+                        resultado.addAll(temporal);
                         resultado.add(produccion.get(produccion.indexOf(Nodo)+1));
+                    }
+                    else{
+                        if(numero+1 < produccion.size()){
+                            resultado.add(produccion.get(numero+1));
+                        }
+
                     }
 
                 }

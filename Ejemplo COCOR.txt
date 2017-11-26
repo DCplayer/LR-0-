@@ -11,6 +11,8 @@ TOKENS
 id = letter{letter} EXCEPT KEYWORDS.
 number = digit{digit}.
 IGNORE "	"
+
+
 PRODUCTIONS
 E = E + T | T.
 T = T * F | F.
