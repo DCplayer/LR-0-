@@ -340,8 +340,29 @@ public class MainCocoR {
             e.printStackTrace();
         }
 
+        try (BufferedReader CreadorDeMatrices = new BufferedReader(new FileReader("matrizDeParseo.txt"))) {
+            CreadorDeMatrices.mark(1000);
+            String lectura = CreadorDeMatrices.readLine();
+            ArrayList<ArrayList<String>> matriz = new ArrayList<>();
+            while(lectura != null) {
+                ArrayList<String> fila = new ArrayList<>();
 
+                List<String> lista = Arrays.asList(lectura.split(","));
+                if(lista.size() > 1){
+                    fila.addAll(lista);
+                    matriz.add(fila);
 
+                }
+
+                lectura = CreadorDeMatrices.readLine();
+            }
+            CreadorDeMatrices.close();
+        }catch (FileNotFoundException ex){
+            System.out.println(ex);
+        }
+        catch (IOException ex){
+            System.out.println(ex);
+        }
 
 
     }

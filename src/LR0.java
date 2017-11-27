@@ -2,6 +2,7 @@ import com.sun.imageio.stream.CloseableDisposerRecord;
 import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader;
 import com.sun.xml.internal.messaging.saaj.util.transform.EfficientStreamingTransformer;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -550,7 +551,24 @@ public class LR0 {
                 }
             }
         }
+        String matriz = "";
+        for(ArrayList<String> linea: tabla){
+            for(String s: linea){
+                matriz = matriz + s + ",";
+            }
+            matriz = matriz + "\n";
+        }
+        try {
 
+            PrintWriter writer = new PrintWriter("matrizDeParseo.txt");
+            writer.println(matriz);
+            writer.close();
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
         //---------------------------------------------------------------------
         return tabla;
     }
